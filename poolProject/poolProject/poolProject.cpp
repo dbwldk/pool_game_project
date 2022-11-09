@@ -4,6 +4,9 @@
 #include "framework.h"
 #include "poolProject.h"
 
+#include <stdlib.h>
+#include <time.h>
+
 #define MAX_LOADSTRING 100
 
 // 전역 변수:
@@ -121,6 +124,16 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 //  WM_DESTROY  - 종료 메시지를 게시하고 반환합니다.
 //
 //
+
+//그라운드
+RECT ground;
+//공(기본 공)
+RECT ball;
+
+//타이머 시간 값
+int g_timer;
+
+
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     switch (message)
@@ -142,11 +155,60 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             }
         }
         break;
+
+    case WM_TIMER:
+        if (1 == wParam)
+        {
+            // 타이머 값 감소
+            if (100 <= g_timer)
+                g_timer -= 50;
+            // 타이머 재설정
+            KillTimer(hWnd, 1);
+            SetTimer(hWnd, 1, g_timer, NULL);
+
+            
+            ///////////////이동 완료
+        }
+        break;
+
+    case WM_CREATE:
+    {
+        // 시드 값을 생성
+        srand(time(NULL));
+        // 타이머 기본 값 설정
+        g_timer = 1000;
+
+        // 타이머 설정 - 상대방의 이동
+        SetTimer(hWnd, 1, g_timer, NULL);
+        // 시간을 재기 위한 타이머
+        SetTimer(hWnd, 2, 1000, NULL);
+
+        // 기본 공의 초기 좌표를 설정
+        ball.left = 500;
+        ball.top = 300;
+        ball.right = 530;
+        ball.bottom = 330;
+
+        // 그라운드 좌표
+        ground.left = 10;
+        ground.top = 10;
+        ground.right = 1000;
+        ground.bottom = 600;
+    }
+        break;
+
     case WM_PAINT:
         {
             PAINTSTRUCT ps;
             HDC hdc = BeginPaint(hWnd, &ps);
             // TODO: 여기에 hdc를 사용하는 그리기 코드를 추가합니다...
+
+            // 그라운드
+            Rectangle(hdc, ground.left, ground.top, ground.right, ground.bottom);
+
+            // 공
+            Ellipse(hdc, ball.left, ball.top, ball.right, ball.bottom);
+
             EndPaint(hWnd, &ps);
         }
         break;
