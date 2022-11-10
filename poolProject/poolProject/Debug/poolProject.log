@@ -1,3 +1,8 @@
 ﻿  poolProject.cpp
-D:\202107024\pool_game_cpp_2022\poolProject\poolProject\poolProject.cpp(177,19): warning C4244: '인수': 'time_t'에서 'unsigned int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+D:\202107024\pool_game_cpp_2022\poolProject\poolProject\poolProject.cpp(165,37): warning C4244: '=': 'double'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+D:\202107024\pool_game_cpp_2022\poolProject\poolProject\poolProject.cpp(149,12): warning C4101: 'y' :참조되지 않은 지역 변수입니다.
+D:\202107024\pool_game_cpp_2022\poolProject\poolProject\poolProject.cpp(149,15): warning C4101: 'i' :참조되지 않은 지역 변수입니다.
+D:\202107024\pool_game_cpp_2022\poolProject\poolProject\poolProject.cpp(149,9): warning C4101: 'x' :참조되지 않은 지역 변수입니다.
+D:\202107024\pool_game_cpp_2022\poolProject\poolProject\poolProject.cpp(244,22): warning C4244: '=': 'double'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+D:\202107024\pool_game_cpp_2022\poolProject\poolProject\poolProject.cpp(245,22): warning C4244: '=': 'double'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
   poolProject.vcxproj -> D:\202107024\pool_game_cpp_2022\poolProject\Debug\poolProject.exe

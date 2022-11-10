@@ -6,6 +6,7 @@
 
 #include <stdlib.h>
 #include <time.h>
+#include <cmath>
 
 #define MAX_LOADSTRING 100
 
@@ -130,8 +131,54 @@ RECT ground;
 //공(기본 공)
 RECT ball;
 
-//타이머 시간 값
-int g_timer;
+//global lparam
+LPARAM g_lparam;
+
+//global value
+int g_x, g_y;
+
+//click 좌표
+int c_x, c_y;
+
+//기준 ball의 좌표
+int coo_x, coo_y;
+
+//스레드 함수
+DWORD WINAPI draw(LPVOID param) 
+{
+    int x, y, i;
+    HDC hdc;
+    HWND hWnd = (HWND)param;
+
+    c_x = LOWORD(g_lparam);
+    c_y = HIWORD(g_lparam);
+
+    hdc = GetDC(hWnd);
+
+    MoveToEx(hdc, coo_x, coo_y, NULL);
+        
+    double m = (c_y - coo_y) / (c_x - coo_x); //기울기
+
+    if (coo_x > c_x) {
+        for (int i = coo_x; i > c_x; i--) {
+            g_x = i;
+            g_y = m * (g_x - coo_x) + coo_y;
+
+            /// 문맥 교환
+            Sleep(30);
+            LineTo(hdc, g_x, g_y);
+            }
+        ReleaseDC(hWnd, hdc);
+
+        }
+    ExitThread(0);
+    return 0;
+}
+
+// 스레드의 제어를 위해 선언
+HANDLE g_hdl[3000] = { NULL, };
+// 배열 첨자용 변수
+int g_index = 0;
 
 
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
@@ -156,38 +203,46 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         }
         break;
 
-    case WM_TIMER:
-        if (1 == wParam)
-        {
-            // 타이머 값 감소
-            if (100 <= g_timer)
-                g_timer -= 50;
-            // 타이머 재설정
-            KillTimer(hWnd, 1);
-            SetTimer(hWnd, 1, g_timer, NULL);
+    case WM_LBUTTONDOWN:
+    {
+        // 스레드의 ID 값 확인 선언
+        DWORD tid = 0;
 
-            
-            ///////////////이동 완료
+        //마우스 좌표 넘기기
+        g_lparam = lParam;
+
+        //스레드 함수 호출
+        g_hdl[g_index++] = CreateThread(NULL, 0, draw, hWnd, 0, NULL);
+
+        // 스레드 생성 여부를 확인
+        if (NULL == g_hdl)
+        {
+            MessageBox(hWnd, L"스레드 생성 실패", L"앗", MB_OK);
+            // 생성 실패 시, 진행할 필요가 없음
+            break;
         }
+    }
+        break;
+
+    case WM_RBUTTONDOWN:
+    {
+        int i = 0;
+        for (i = 0; i < 3000; i++)
+            SuspendThread(g_hdl[i]);
+    }
         break;
 
     case WM_CREATE:
     {
-        // 시드 값을 생성
-        srand(time(NULL));
-        // 타이머 기본 값 설정
-        g_timer = 1000;
-
-        // 타이머 설정 - 상대방의 이동
-        SetTimer(hWnd, 1, g_timer, NULL);
-        // 시간을 재기 위한 타이머
-        SetTimer(hWnd, 2, 1000, NULL);
-
         // 기본 공의 초기 좌표를 설정
         ball.left = 500;
         ball.top = 300;
         ball.right = 530;
         ball.bottom = 330;
+
+        //ball 좌표 넘기기
+        coo_x = round((ball.left + ball.right) / 2);
+        coo_x = round((ball.top + ball.bottom) / 2);
 
         // 그라운드 좌표
         ground.left = 10;
