@@ -138,41 +138,51 @@ LPARAM g_lparam;
 int g_x, g_y;
 
 //click 좌표
-int c_x, c_y;
+int click_x, click_y;
 
 //기준 ball의 좌표
-int coo_x, coo_y;
+int std_x, std_y;
 
 //스레드 함수
-DWORD WINAPI draw(LPVOID param) 
+DWORD WINAPI draw(LPVOID param)
 {
-    int x, y, i;
-    HDC hdc;
-    HWND hWnd = (HWND)param;
+	int x, y, i;
+	HDC hdc;
+	HWND hWnd = (HWND)param;
 
-    c_x = LOWORD(g_lparam);
-    c_y = HIWORD(g_lparam);
+	click_x = LOWORD(g_lparam);
+	click_y = HIWORD(g_lparam);
 
-    hdc = GetDC(hWnd);
+	hdc = GetDC(hWnd);
 
-    MoveToEx(hdc, coo_x, coo_y, NULL);
-        
-    double m = (c_y - coo_y) / (c_x - coo_x); //기울기
+	MoveToEx(hdc, std_x, std_y, NULL);
 
-    if (coo_x > c_x) {
-        for (int i = coo_x; i > c_x; i--) {
-            g_x = i;
-            g_y = m * (g_x - coo_x) + coo_y;
+	double m = (click_y - std_y) / (click_x - std_x); //기울기
 
-            /// 문맥 교환
-            Sleep(30);
-            LineTo(hdc, g_x, g_y);
-            }
-        ReleaseDC(hWnd, hdc);
+	if (std_x > click_x) {
+		for (int i = std_x; i > click_x; i--) {
+			g_x = i;
+			g_y = m * (g_x - std_x) + std_y;
 
-        }
-    ExitThread(0);
-    return 0;
+			/// 문맥 교환
+			Sleep(30);
+			LineTo(hdc, g_x, g_y);
+		}
+	}
+	else {
+		for (int i = click_x; i > std_x; i--) {
+			g_x = i;
+			g_y = m * (g_x - std_x) + std_y;
+
+			/// 문맥 교환
+			Sleep(30);
+			LineTo(hdc, g_x, g_y);
+		}
+	}
+	ReleaseDC(hWnd, hdc);
+
+	ExitThread(0);
+	return 0;
 }
 
 // 스레드의 제어를 위해 선언
@@ -180,118 +190,117 @@ HANDLE g_hdl[3000] = { NULL, };
 // 배열 첨자용 변수
 int g_index = 0;
 
-
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-    switch (message)
-    {
-    case WM_COMMAND:
-        {
-            int wmId = LOWORD(wParam);
-            // 메뉴 선택을 구문 분석합니다:
-            switch (wmId)
-            {
-            case IDM_ABOUT:
-                DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, About);
-                break;
-            case IDM_EXIT:
-                DestroyWindow(hWnd);
-                break;
-            default:
-                return DefWindowProc(hWnd, message, wParam, lParam);
-            }
-        }
-        break;
+	switch (message)
+	{
+	case WM_COMMAND:
+	{
+		int wmId = LOWORD(wParam);
+		// 메뉴 선택을 구문 분석합니다:
+		switch (wmId)
+		{
+		case IDM_ABOUT:
+			DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, About);
+			break;
+		case IDM_EXIT:
+			DestroyWindow(hWnd);
+			break;
+		default:
+			return DefWindowProc(hWnd, message, wParam, lParam);
+		}
+	}
+	break;
 
-    case WM_LBUTTONDOWN:
-    {
-        // 스레드의 ID 값 확인 선언
-        DWORD tid = 0;
+	case WM_LBUTTONDOWN:
+	{
+		// 스레드의 ID 값 확인 선언
+		DWORD tid = 0;
 
-        //마우스 좌표 넘기기
-        g_lparam = lParam;
+		//마우스 좌표 넘기기
+		g_lparam = lParam;
 
-        //스레드 함수 호출
-        g_hdl[g_index++] = CreateThread(NULL, 0, draw, hWnd, 0, NULL);
+		//스레드 함수 호출
+		g_hdl[g_index++] = CreateThread(NULL, 0, draw, hWnd, 0, NULL);
 
-        // 스레드 생성 여부를 확인
-        if (NULL == g_hdl)
-        {
-            MessageBox(hWnd, L"스레드 생성 실패", L"앗", MB_OK);
-            // 생성 실패 시, 진행할 필요가 없음
-            break;
-        }
-    }
-        break;
+		// 스레드 생성 여부를 확인
+		if (NULL == g_hdl)
+		{
+			MessageBox(hWnd, L"스레드 생성 실패", L"앗", MB_OK);
+			// 생성 실패 시, 진행할 필요가 없음
+			break;
+		}
+	}
+	break;
 
-    case WM_RBUTTONDOWN:
-    {
-        int i = 0;
-        for (i = 0; i < 3000; i++)
-            SuspendThread(g_hdl[i]);
-    }
-        break;
+	case WM_RBUTTONDOWN:
+	{
+		int i = 0;
+		for (i = 0; i < 3000; i++)
+			SuspendThread(g_hdl[i]);
+	}
+	break;
 
-    case WM_CREATE:
-    {
-        // 기본 공의 초기 좌표를 설정
-        ball.left = 500;
-        ball.top = 300;
-        ball.right = 530;
-        ball.bottom = 330;
+	case WM_CREATE:
+	{
+		// 기본 공의 초기 좌표를 설정
+		ball.left = 500;
+		ball.top = 300;
+		ball.right = 530;
+		ball.bottom = 330;
 
-        //ball 좌표 넘기기
-        coo_x = round((ball.left + ball.right) / 2);
-        coo_x = round((ball.top + ball.bottom) / 2);
+		//ball 좌표 넘기기
+		std_x = round((ball.left + ball.right) / 2);
+		std_y = round((ball.top + ball.bottom) / 2);
 
-        // 그라운드 좌표
-        ground.left = 10;
-        ground.top = 10;
-        ground.right = 1000;
-        ground.bottom = 600;
-    }
-        break;
+		// 그라운드 좌표
+		ground.left = 10;
+		ground.top = 10;
+		ground.right = 1000;
+		ground.bottom = 600;
+	}
+	break;
 
-    case WM_PAINT:
-        {
-            PAINTSTRUCT ps;
-            HDC hdc = BeginPaint(hWnd, &ps);
-            // TODO: 여기에 hdc를 사용하는 그리기 코드를 추가합니다...
+	case WM_PAINT:
+	{
+		PAINTSTRUCT ps;
+		HDC hdc = BeginPaint(hWnd, &ps);
+		// TODO: 여기에 hdc를 사용하는 그리기 코드를 추가합니다...
 
-            // 그라운드
-            Rectangle(hdc, ground.left, ground.top, ground.right, ground.bottom);
+		// 그라운드
+		Rectangle(hdc, ground.left, ground.top, ground.right, ground.bottom);
 
-            // 공
-            Ellipse(hdc, ball.left, ball.top, ball.right, ball.bottom);
+		// 공
+		Ellipse(hdc, ball.left, ball.top, ball.right, ball.bottom);
 
-            EndPaint(hWnd, &ps);
-        }
-        break;
-    case WM_DESTROY:
-        PostQuitMessage(0);
-        break;
-    default:
-        return DefWindowProc(hWnd, message, wParam, lParam);
-    }
-    return 0;
+		EndPaint(hWnd, &ps);
+	}
+	break;
+	case WM_DESTROY:
+		PostQuitMessage(0);
+		break;
+	default:
+		return DefWindowProc(hWnd, message, wParam, lParam);
+	}
+	return 0;
 }
 
 // 정보 대화 상자의 메시지 처리기입니다.
 INT_PTR CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
-    UNREFERENCED_PARAMETER(lParam);
-    switch (message)
-    {
-    case WM_INITDIALOG:
-        return (INT_PTR)TRUE;
+	UNREFERENCED_PARAMETER(lParam);
+	switch (message)
+	{
+	case WM_INITDIALOG:
+		return (INT_PTR)TRUE;
 
-    case WM_COMMAND:
-        if (LOWORD(wParam) == IDOK || LOWORD(wParam) == IDCANCEL)
-        {
-            EndDialog(hDlg, LOWORD(wParam));
-            return (INT_PTR)TRUE;
-        }
-        break;
-    }
-    return (INT_PTR)FALSE;
+	case WM_COMMAND:
+		if (LOWORD(wParam) == IDOK || LOWORD(wParam) == IDCANCEL)
+		{
+			EndDialog(hDlg, LOWORD(wParam));
+			return (INT_PTR)TRUE;
+		}
+		break;
+	}
+	return (INT_PTR)FALSE;
 }
