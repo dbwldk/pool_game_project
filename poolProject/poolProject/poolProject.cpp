@@ -143,30 +143,36 @@ int click_x, click_y;
 //기준 ball의 좌표
 int std_x, std_y;
 
+//기준 ball
+double std_m; //기울기
+int std_d; //이동거리
+
 //스레드 함수
 DWORD WINAPI draw(LPVOID param)
 {
 	HDC hdc;
 	HWND hWnd = (HWND)param;
 
-	double m = 0; //기울기
+	std_m = 0.0;
+	std_d = 0;
 
 	click_x = LOWORD(g_lparam);
 	click_y = HIWORD(g_lparam);
 
 	hdc = GetDC(hWnd);
 
-	MoveToEx(hdc, click_x, click_y, NULL);
+	MoveToEx(hdc, std_x, std_y, NULL);
 
-	m = (double)(click_y - std_y) / (double)(click_x - std_x); //기울기
+	std_m = (double)(click_y - std_y) / (double)(click_x - std_x); //기울기
 
 	if (std_x < click_x) {
-		for (int i = click_x; i > ground.left; i--) {
+		for (int i = std_x; i > ground.left; i--) {
+			std_d++;
 			g_x = i;
-			g_y = m * (g_x - std_x) + std_y;
+			g_y = std_m * (g_x - std_x) + std_y;
 
 			/// 문맥 교환
-			Sleep(5);
+			//Sleep(1);
 			LineTo(hdc, g_x, g_y);
 
 			//ground y 벗어나면 막기
@@ -175,12 +181,12 @@ DWORD WINAPI draw(LPVOID param)
 		}
 	}
 	else {
-		for (int i = click_x; i < ground.right; i++) {
+		for (int i = std_x; i < ground.right; i++) {
 			g_x = i;
-			g_y = m * (g_x - std_x) + std_y;
+			g_y = std_m * (g_x - std_x) + std_y;
 
 			/// 문맥 교환
-			Sleep(5);
+			//Sleep(1);
 			LineTo(hdc, g_x, g_y);
 
 			//ground y 벗어나면 막기
@@ -239,8 +245,14 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			// 생성 실패 시, 진행할 필요가 없음
 			break;
 		}
+
+		//이동 경로 미리 보여주기
+
 	}
 	break;
+
+	case WM_MOUSEMOVE:
+		break;
 
 	case WM_RBUTTONDOWN:
 	{
