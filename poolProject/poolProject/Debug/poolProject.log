@@ -1,6 +1,6 @@
 ﻿  poolProject.cpp
-D:\202107024\pool_game_cpp_2022\poolProject\poolProject\poolProject.cpp(172,32): warning C4244: '=': 'double'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-D:\202107024\pool_game_cpp_2022\poolProject\poolProject\poolProject.cpp(186,32): warning C4244: '=': 'double'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-D:\202107024\pool_game_cpp_2022\poolProject\poolProject\poolProject.cpp(268,16): warning C4244: '=': 'double'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-D:\202107024\pool_game_cpp_2022\poolProject\poolProject\poolProject.cpp(269,16): warning C4244: '=': 'double'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+D:\202107024\pool_game_cpp_2022\poolProject\poolProject\poolProject.cpp(181,34): warning C4244: '=': 'double'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+D:\202107024\pool_game_cpp_2022\poolProject\poolProject\poolProject.cpp(195,34): warning C4244: '=': 'double'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+D:\202107024\pool_game_cpp_2022\poolProject\poolProject\poolProject.cpp(326,16): warning C4244: '=': 'double'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+D:\202107024\pool_game_cpp_2022\poolProject\poolProject\poolProject.cpp(327,16): warning C4244: '=': 'double'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
   poolProject.vcxproj -> D:\202107024\pool_game_cpp_2022\poolProject\Debug\poolProject.exe

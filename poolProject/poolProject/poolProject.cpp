@@ -140,6 +140,12 @@ int g_x, g_y;
 //click 좌표
 int click_x, click_y;
 
+//drop 좌표
+int drop_x, drop_y;
+
+//마우스 움직임 좌표
+int move_x, move_y;
+
 //기준 ball의 좌표
 int std_x, std_y;
 
@@ -147,8 +153,11 @@ int std_x, std_y;
 double std_m; //기울기
 int std_d; //이동거리
 
+//press
+bool g_press;
+
 //스레드 함수
-DWORD WINAPI draw(LPVOID param)
+DWORD WINAPI user_F(LPVOID param)
 {
 	HDC hdc;
 	HWND hWnd = (HWND)param;
@@ -156,20 +165,20 @@ DWORD WINAPI draw(LPVOID param)
 	std_m = 0.0;
 	std_d = 0;
 
-	click_x = LOWORD(g_lparam);
-	click_y = HIWORD(g_lparam);
+	drop_x = LOWORD(g_lparam);
+	drop_y = HIWORD(g_lparam);
 
 	hdc = GetDC(hWnd);
 
-	MoveToEx(hdc, std_x, std_y, NULL);
+	MoveToEx(hdc, click_x, click_y, NULL);
 
-	std_m = (double)(click_y - std_y) / (double)(click_x - std_x); //기울기
+	std_m = (double)(drop_y - click_y) / (double)(drop_x - click_x); //기울기
 
-	if (std_x < click_x) {
-		for (int i = std_x; i > ground.left; i--) {
+	if (click_x < drop_x) {
+		for (int i = click_x; i > ground.left; i--) {
 			std_d++;
 			g_x = i;
-			g_y = std_m * (g_x - std_x) + std_y;
+			g_y = std_m * (g_x - click_x) + click_y;
 
 			/// 문맥 교환
 			//Sleep(1);
@@ -181,9 +190,9 @@ DWORD WINAPI draw(LPVOID param)
 		}
 	}
 	else {
-		for (int i = std_x; i < ground.right; i++) {
+		for (int i = click_x; i < ground.right; i++) {
 			g_x = i;
-			g_y = std_m * (g_x - std_x) + std_y;
+			g_y = std_m * (g_x - click_x) + click_y;
 
 			/// 문맥 교환
 			//Sleep(1);
@@ -204,9 +213,42 @@ DWORD WINAPI draw(LPVOID param)
 HANDLE g_hdl[3000] = { NULL, };
 // 배열 첨자용 변수
 int g_index = 0;
+// 스레드의 ID 값 확인 선언
+DWORD tid = 0;
+
+
+//드래그로 큐대 구현
+void cue(HDC hdc, HWND hWnd, LPARAM lParam) {
+	//마우스가 클릭된 상태로 움직일 경우, 실시간으로 (클릭 시작 위치 => 마우스의 현재 위치)로 선분을 그린다.
+	hdc = GetDC(hWnd);
+	HPEN os_pen, my_pen;
+
+	//펜 생성
+	my_pen = CreatePen(PS_SOLID, 5, RGB(0, 255, 0));
+	//os로 전달
+	os_pen = (HPEN)SelectObject(hdc, my_pen);
+
+	move_x = LOWORD(lParam);
+	move_y = HIWORD(lParam);
+
+	MoveToEx(hdc, click_x, click_y, NULL);
+	LineTo(hdc, move_x, move_y);
+
+	//select
+	SelectObject(hdc, os_pen);
+	//delete
+	DeleteObject(my_pen);
+
+	ReleaseDC(hWnd, hdc);
+
+	InvalidateRect(hWnd, NULL, TRUE); //배경 제외 화면 무효화
+	Sleep(1);
+}
 
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
+	HDC hdc; //hdc
+
 	switch (message)
 	{
 	case WM_COMMAND:
@@ -229,29 +271,39 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
 	case WM_LBUTTONDOWN:
 	{
-		// 스레드의 ID 값 확인 선언
-		DWORD tid = 0;
+		g_press = true; //마우스 눌림
+		click_x = LOWORD(lParam);
+		click_y = HIWORD(lParam);
+	}
+	break;
 
+	case WM_LBUTTONUP:
+		g_press = false; //마우스 안눌림
+
+		///마우스가 떨어진 순간부터 공 이동
+
+		tid = 0; //tid reset
 		//마우스 좌표 넘기기
 		g_lparam = lParam;
 
-		//스레드 함수 호출
-		g_hdl[g_index++] = CreateThread(NULL, 0, draw, hWnd, 0, NULL);
+		//스레드 함수(user_F) 호출
+		g_hdl[g_index++] = CreateThread(NULL, 0, user_F, hWnd, 0, NULL);
 
 		// 스레드 생성 여부를 확인
 		if (NULL == g_hdl)
 		{
-			MessageBox(hWnd, L"스레드 생성 실패", L"앗", MB_OK);
-			// 생성 실패 시, 진행할 필요가 없음
+			MessageBox(hWnd, L"스레드 생성 실패", L"error", MB_OK);
 			break;
 		}
-
-		//이동 경로 미리 보여주기
-
-	}
-	break;
+		break;
 
 	case WM_MOUSEMOVE:
+		if (false == g_press)
+			break; //마우스가 눌리지 않은 경우 동작 x
+
+		hdc = GetDC(hWnd);
+		cue(hdc, hWnd, lParam); //큐대
+		
 		break;
 
 	case WM_RBUTTONDOWN:
