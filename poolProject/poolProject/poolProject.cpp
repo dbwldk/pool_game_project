@@ -162,23 +162,23 @@ DWORD WINAPI user_F(LPVOID param)
 	HDC hdc;
 	HWND hWnd = (HWND)param;
 
-	std_m = 0.0;
-	std_d = 0;
+	std_m = 0.0; //기울기
+	std_d = 0; //이동 거리
 
 	drop_x = LOWORD(g_lparam);
 	drop_y = HIWORD(g_lparam);
 
 	hdc = GetDC(hWnd);
 
-	MoveToEx(hdc, click_x, click_y, NULL);
+	MoveToEx(hdc, std_x, std_y, NULL);
 
-	std_m = (double)(drop_y - click_y) / (double)(drop_x - click_x); //기울기
+	std_m = (double)(std_y - drop_y) / (double)(std_x - drop_x); //기울기
 
-	if (click_x < drop_x) {
-		for (int i = click_x; i > ground.left; i--) {
+	if (drop_x > std_x) {
+		for (int i = std_x; i > ground.left; i--) {
 			std_d++;
 			g_x = i;
-			g_y = std_m * (g_x - click_x) + click_y;
+			g_y = std_m * (g_x - std_x) + std_y;
 
 			/// 문맥 교환
 			//Sleep(1);
@@ -190,9 +190,9 @@ DWORD WINAPI user_F(LPVOID param)
 		}
 	}
 	else {
-		for (int i = click_x; i < ground.right; i++) {
+		for (int i = std_x; i < ground.right; i++) {
 			g_x = i;
-			g_y = std_m * (g_x - click_x) + click_y;
+			g_y = std_m * (g_x - std_x) + std_y;
 
 			/// 문맥 교환
 			//Sleep(1);
@@ -231,7 +231,7 @@ void cue(HDC hdc, HWND hWnd, LPARAM lParam) {
 	move_x = LOWORD(lParam);
 	move_y = HIWORD(lParam);
 
-	MoveToEx(hdc, click_x, click_y, NULL);
+	MoveToEx(hdc, std_x, std_y, NULL);
 	LineTo(hdc, move_x, move_y);
 
 	//select
